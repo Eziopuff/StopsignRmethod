@@ -28,3 +28,39 @@ plot(pressure)
 ```
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+```{r}
+
+install.packages("pixmap")
+library("pixmap")
+
+image <- read.pnm('GTSRB/Final_Training/Images/00000/00000_00002.ppm',celires = 1)
+
+redmatrix <- matrix(image@red, nrow = image@size[1], ncol = image@size[2])
+greenmatrix <- matrix(image@green, nrow = image@size[1], ncol = image@size[2])
+bluematrix <- matrix(image@blue, nrow = image@size[1], ncol = image@size[2])
+
+plot(image, main = sprintf("Original"))
+rotate <- function(x) t(apply(x, 2, rev))
+par(mfrow = c(1, 3))
+image(rotate(redmatrix), col = grey.colors(255), main = sprintf("Red"))
+image(rotate(greenmatrix), col = grey.colors(255), main = sprintf("Green"))
+image(rotate(bluematrix), col = grey.colors(255), main = sprintf("Blue"))
+
+source("http://bioconductor.org/biocLite.R")
+install.packages("EBImage") #https://bioconductor.org/packages/release/bioc/html/EBImage.html
+library("EBImage")
+biocLite("EBImage")
+roiResize <- function(inputMatrix, roi) {
+  roiMatrix <- inputMatrix[roi[1, 'Roi.Y1']:roi[1, 'Roi.Y2'],roi[1, 'Roi.X1']:roi[1, 'Roi.X2']]
+  return(resize(roiMatrix, 32, 32))
+}
+
+annotation <- read.csv(file = "GTSRB/Final_Training/Images/00000/GT-00000.csv", header = TRUE, sep = ";")
+roi = annotation[3, ]
+redMatrixCropped <- roiResize(redmatrix, roi)
+par(mfrow = c(1, 2))
+image(rotate(redmatrix), col = grey.colors(255), main = sprintf("Original"))
+image(rotate(redMatrixCropped), col = grey.colors(255), main = sprintf("Processed"))
+
+```
